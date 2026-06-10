@@ -199,6 +199,7 @@ canvas{display:block;width:100%}
     Log<em>Moran</em>
     <span class="logo-sync" id="sync-status">—</span>
   </div>
+  <div class="nav-item"     data-page="today">   <span class="nav-icon">📝</span>Séance du jour</div>
   <div class="nav-item on"  data-page="exercises"><span class="nav-icon">🏋</span>Exercices</div>
   <div class="nav-item"     data-page="muscles">  <span class="nav-icon">💪</span>Muscles</div>
   <div class="nav-item"     data-page="sessions"> <span class="nav-icon">📋</span>Séances</div>
@@ -207,6 +208,7 @@ canvas{display:block;width:100%}
   <div class="nav-item"     data-page="progress"> <span class="nav-icon">📈</span>Progression</div>
 </aside>
 <div class="mnav" id="mnav">
+  <div class="mni"    data-page="today">Séance</div>
   <div class="mni on" data-page="exercises">Exercices</div>
   <div class="mni"    data-page="muscles">Muscles</div>
   <div class="mni"    data-page="sessions">Séances</div>
@@ -253,18 +255,32 @@ canvas{display:block;width:100%}
   <div id="prog-list"></div>
 </div>
 
-<!-- SÉANCE ACTIVE -->
-<div class="page" id="page-active-wo">
-  <div class="wo-topbar">
-    <div class="wo-topbar-name" id="wo-name">—</div>
-    <div class="wo-timer-v" id="wo-timer">00:00</div>
+<!-- SÉANCE DU JOUR -->
+<div class="page" id="page-today">
+  <div class="ph">
+    <div>
+      <div class="ph-title">Séance du jour</div>
+      <div class="ph-sub" id="today-date"></div>
+    </div>
+    <button class="btn btn-gr btn-sm" onclick="finishWo()">Terminer ✓</button>
   </div>
+
+  <!-- Charger une séance template (optionnel) -->
+  <div id="today-load-bar" style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">
+    <select id="today-sess-sel" style="flex:1;font-size:13px;">
+      <option value="">— Partir d'une séance existante —</option>
+    </select>
+    <button class="btn btn-gh btn-sm" onclick="loadSessionIntoToday()">Charger</button>
+  </div>
+
+  <div id="today-save-indicator" style="font-size:11px;color:var(--muted);font-family:var(--m);margin-bottom:12px;min-height:16px;"></div>
+
   <div id="wo-ex-list"></div>
+
   <div style="margin-top:16px;display:flex;gap:8px;align-items:center;">
     <button class="btn btn-gh btn-sm" onclick="openPickerForWo()">+ Exercice</button>
     <div style="flex:1"></div>
-    <button class="btn btn-rd btn-sm" onclick="cancelWo()">Annuler</button>
-    <button class="btn btn-gr btn-sm" onclick="finishWo()">Terminer ✓</button>
+    <button class="btn btn-rd btn-sm" onclick="clearToday()">Vider la séance</button>
   </div>
 </div>
 
@@ -272,7 +288,6 @@ canvas{display:block;width:100%}
 <div class="page" id="page-week">
   <div class="ph">
     <div><div class="ph-title">Semaine</div><div class="ph-sub" id="week-range"></div></div>
-    <button class="btn btn-dk btn-sm" onclick="openStartWo()">▶ Démarrer</button>
   </div>
   <div class="week-kpis">
     <div class="week-kpi"><div class="week-kpi-v" id="w-vol">0</div><div class="week-kpi-l">Volume total (kg)</div></div>
@@ -402,21 +417,6 @@ canvas{display:block;width:100%}
   </div>
 </div>
 
-<div class="overlay" id="m-start-wo">
-  <div class="modal">
-    <div class="modal-ttl">Démarrer une séance</div>
-    <div class="fg"><label>Séance</label>
-      <select id="start-sess-sel"><option value="">— Séance libre —</option></select>
-    </div>
-    <div class="fg"><label>Nom (optionnel)</label>
-      <input type="text" id="start-wo-name" placeholder="Laisse vide pour utiliser le nom de la séance">
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-gh btn-sm" onclick="closeM('m-start-wo')">Annuler</button>
-      <button class="btn btn-am btn-sm" onclick="startWo()">▶ Démarrer</button>
-    </div>
-  </div>
-</div>
 
 <div class="overlay" id="m-picker">
   <div class="modal">
@@ -533,13 +533,13 @@ function goPage(name){
   document.querySelectorAll('.nav-item,.mni').forEach(n=>n.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
   document.querySelectorAll('[data-page="'+name+'"]').forEach(n=>n.classList.add('on'));
+  if(name==='today')     renderToday();
   if(name==='exercises') renderEx();
   if(name==='muscles')   renderMuscles();
   if(name==='sessions')  renderSess();
   if(name==='programs')  renderProg();
   if(name==='week')      renderWeek();
   if(name==='progress')  renderProgress();
-  if(name==='active-wo') renderActiveWo();
 }
 document.querySelectorAll('.nav-item,.mni').forEach(n=>n.addEventListener('click',()=>goPage(n.dataset.page)));
 
@@ -912,10 +912,13 @@ function pickEx(id){
   }
   if(_pickerTarget==='wo'){
     if(!currentWo) return;
-    const ne={exId:id,name:ex.name,muscle:ex.muscle,sets:[{kg:'',reps:''}]};
+    const ne={exId:id, name:ex.name, muscle:ex.muscle, sets:[{kg:'',reps:''}]};
     if(_replaceWoIdx!==null) currentWo.entries[_replaceWoIdx]=ne;
     else currentWo.entries.push(ne);
-    closeM('m-picker'); renderActiveWo(); return;
+    closeM('m-picker');
+    renderActiveWo();
+    scheduleAutoSave();
+    return;
   }
 }
 
@@ -924,44 +927,137 @@ function addSessToP(sid){
   closeM('m-sess-pick');
 }
 
-// ════ SÉANCE ACTIVE ════
-function openStartWo(){
-  const sel=document.getElementById('start-sess-sel');
-  sel.innerHTML='<option value="">— Séance libre —</option>'+sessions.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-  document.getElementById('start-wo-name').value='';
-  openM('m-start-wo');
+// ════ SÉANCE DU JOUR ════
+// currentWo = {date, entries:[{exId,name,muscle,sets:[{kg,reps}]}], logId?}
+// Autosave : debounce 1.5s après chaque modif
+
+let _autoSaveTimer=null;
+let _autoSaving=false;
+
+function todayDateStr(){ return new Date().toISOString().split('T')[0]; }
+
+function setSaveIndicator(msg,color='var(--muted)'){
+  const el=document.getElementById('today-save-indicator');
+  if(el){el.textContent=msg;el.style.color=color;}
 }
 
-function startWo(){
-  const sessId=document.getElementById('start-sess-sel').value;
-  const sess=sessId?sessions.find(s=>s.id===sessId):null;
-  const name=document.getElementById('start-wo-name').value.trim()||(sess?sess.name:'Séance libre');
-  const entries=sess?(sess.exercises||[]).map(e=>{
+function scheduleAutoSave(){
+  clearTimeout(_autoSaveTimer);
+  setSaveIndicator('...');
+  _autoSaveTimer=setTimeout(()=>autoSave(),1500);
+}
+
+async function autoSave(){
+  if(!currentWo||_autoSaving) return;
+  _autoSaving=true;
+  setSaveIndicator('Sauvegarde...');
+  try {
+    const body={
+      session_name: currentWo.name||'Séance du jour',
+      session_id: currentWo.sessId||null,
+      date: currentWo.date,
+      entries: currentWo.entries,
+      elapsed_seconds: 0
+    };
+    if(currentWo.logId){
+      // Mise à jour
+      await dbUpdate('logs', currentWo.logId, body);
+      const i=logs.findIndex(l=>l.id===currentWo.logId);
+      if(i>=0) logs[i]={...logs[i],...body};
+    } else {
+      // Première sauvegarde
+      const [r]=await dbInsert('logs', body);
+      currentWo.logId=r.id;
+      logs.push(r);
+    }
+    setSaveIndicator('● Sauvegardé',  'var(--green)');
+    setSyncStatus('● sync');
+  } catch(e){
+    setSaveIndicator('⚠ Erreur de sauvegarde','var(--red)');
+  }
+  _autoSaving=false;
+}
+
+function renderToday(){
+  // Date
+  const today=todayDateStr();
+  document.getElementById('today-date').textContent=
+    new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+
+  // Populate session selector
+  const sel=document.getElementById('today-sess-sel');
+  sel.innerHTML='<option value="">— Partir d\'une séance existante —</option>'+
+    sessions.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+
+  // Si pas de séance en cours, créer une vide pour aujourd'hui
+  if(!currentWo){
+    currentWo={name:'Séance du jour', date:today, sessId:null, logId:null, entries:[]};
+  }
+
+  renderActiveWo();
+}
+
+function loadSessionIntoToday(){
+  const sessId=document.getElementById('today-sess-sel').value;
+  if(!sessId) return;
+  const sess=sessions.find(s=>s.id===sessId);
+  if(!sess) return;
+  if(currentWo&&currentWo.entries.length>0){
+    if(!confirm('Remplacer les exercices actuels par ceux de cette séance ?')) return;
+  }
+  const entries=(sess.exercises||[]).map(e=>{
     const x=exercises.find(ex=>ex.id===e.id);
-    return {exId:e.id,name:x?x.name:e.id,muscle:x?x.muscle:'',sets:Array.from({length:e.sets||3},()=>({kg:'',reps:''}))};
-  }):[];
-  currentWo={name,date:new Date().toISOString().split('T')[0],sessId:sessId||null,entries};
-  woStart=Date.now();
-  clearInterval(woTimerInt);
-  woTimerInt=setInterval(()=>{
-    const e=Math.floor((Date.now()-woStart)/1000);
-    const t=document.getElementById('wo-timer');
-    if(t) t.textContent=pad(Math.floor(e/60))+':'+pad(e%60);
-  },1000);
-  closeM('m-start-wo');
-  goPage('active-wo');
+    return {exId:e.id, name:x?x.name:e.id, muscle:x?x.muscle:'', sets:Array.from({length:e.sets||3},()=>({kg:'',reps:''}))};
+  });
+  currentWo.name=sess.name;
+  currentWo.sessId=sessId;
+  currentWo.entries=entries;
+  renderActiveWo();
+  scheduleAutoSave();
+}
+
+function clearToday(){
+  if(!confirm('Vider tous les exercices de la séance ?')) return;
+  currentWo.entries=[];
+  currentWo.name='Séance du jour';
+  currentWo.sessId=null;
+  renderActiveWo();
+  scheduleAutoSave();
 }
 
 function renderActiveWo(){
-  if(!currentWo){
-    document.getElementById('wo-name').textContent='Aucune séance active';
-    document.getElementById('wo-ex-list').innerHTML='<div class="empty"><div class="empty-t">Pas de séance en cours</div><div class="empty-s">Lance une séance depuis Semaine.</div></div>';
+  const el=document.getElementById('wo-ex-list');
+  if(!el) return;
+  if(!currentWo||!currentWo.entries.length){
+    el.innerHTML='<div style="padding:24px 0;text-align:center;color:var(--muted);font-size:13px;">Aucun exercice — clique sur <strong>+ Exercice</strong> pour commencer.</div>';
     return;
   }
-  document.getElementById('wo-name').textContent=currentWo.name;
-  document.getElementById('wo-ex-list').innerHTML=currentWo.entries.map((en,ei)=>buildExBlock(en,ei)).join('');
+  el.innerHTML=currentWo.entries.map((en,ei)=>buildExBlock(en,ei)).join('');
   initDrag();
 }
+
+async function finishWo(){
+  if(!currentWo) return;
+  // Forcer une sauvegarde immédiate avant d'afficher le récap
+  clearTimeout(_autoSaveTimer);
+  showLoad('Enregistrement...');
+  await autoSave();
+  hideLoad();
+
+  const logId=currentWo.logId;
+  const logObj=logs.find(l=>l.id===logId);
+
+  // Réinitialiser pour demain
+  currentWo={name:'Séance du jour', date:todayDateStr(), sessId:null, logId:null, entries:[]};
+  renderActiveWo();
+  setSaveIndicator('');
+
+  goPage('week');
+  if(logObj) showRecap(logObj);
+  setSyncStatus('● sync');
+}
+
+function cancelWo(){ /* plus utilisé */ }
 
 // ── DRAG & DROP (desktop + touch) ──
 let _dragSrc=null, _touchSrc=null, _touchClone=null, _touchOffX=0, _touchOffY=0;
@@ -1056,6 +1152,7 @@ function reorderEntries(from,to){
   const [moved]=entries.splice(from,1);
   entries.splice(to,0,moved);
   renderActiveWo();
+  scheduleAutoSave();
 }
 
 function buildExBlock(en,ei){
@@ -1089,10 +1186,10 @@ function buildExBlock(en,ei){
 }
 
 function toggleEB(ei){const b=document.getElementById('ebb'+ei);b.style.display=b.style.display==='none'?'':'none';}
-function wUpd(ei,si,f,v){if(currentWo)currentWo.entries[ei].sets[si][f]=v;}
-function wAddSet(ei){if(!currentWo)return;const sets=currentWo.entries[ei].sets;const last=sets[sets.length-1]||{};sets.push({kg:last.kg||'',reps:last.reps||''});renderActiveWo();}
-function wDelSet(ei,si){if(!currentWo||currentWo.entries[ei].sets.length<=1)return;currentWo.entries[ei].sets.splice(si,1);renderActiveWo();}
-function wDelEx(ei){if(!currentWo)return;if(!confirm('Supprimer ?'))return;currentWo.entries.splice(ei,1);renderActiveWo();}
+function wUpd(ei,si,f,v){if(!currentWo)return;currentWo.entries[ei].sets[si][f]=v;scheduleAutoSave();}
+function wAddSet(ei){if(!currentWo)return;const sets=currentWo.entries[ei].sets;const last=sets[sets.length-1]||{};sets.push({kg:last.kg||'',reps:last.reps||''});renderActiveWo();scheduleAutoSave();}
+function wDelSet(ei,si){if(!currentWo||currentWo.entries[ei].sets.length<=1)return;currentWo.entries[ei].sets.splice(si,1);renderActiveWo();scheduleAutoSave();}
+function wDelEx(ei){if(!currentWo)return;if(!confirm('Supprimer ?'))return;currentWo.entries.splice(ei,1);renderActiveWo();scheduleAutoSave();}
 
 function getLastSets(exId){
   const sorted=[...logs].sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -1431,7 +1528,9 @@ async function seedIfEmpty(){
 }
 
 // ════ DÉMARRAGE ════
-init().then(()=>seedIfEmpty().then(()=>renderEx()));
+init().then(()=>seedIfEmpty().then(()=>{
+  goPage('today');
+}));
 </script>
 </body>
 </html>
