@@ -949,6 +949,7 @@ function scheduleAutoSave(){
 
 async function autoSave(){
   if(!currentWo||_autoSaving) return;
+  if(!currentWo.entries.length) return; // rien à sauvegarder
   _autoSaving=true;
   setSaveIndicator('Sauvegarde...');
   try {
@@ -960,17 +961,17 @@ async function autoSave(){
       elapsed_seconds: 0
     };
     if(currentWo.logId){
-      // Mise à jour
+      // Toujours UPDATE — jamais de doublon
       await dbUpdate('logs', currentWo.logId, body);
       const i=logs.findIndex(l=>l.id===currentWo.logId);
       if(i>=0) logs[i]={...logs[i],...body};
     } else {
-      // Première sauvegarde
+      // Premier enregistrement
       const [r]=await dbInsert('logs', body);
       currentWo.logId=r.id;
       logs.push(r);
     }
-    setSaveIndicator('● Sauvegardé',  'var(--green)');
+    setSaveIndicator('● Sauvegardé', 'var(--green)');
     setSyncStatus('● sync');
   } catch(e){
     setSaveIndicator('⚠ Erreur de sauvegarde','var(--red)');
@@ -1038,7 +1039,6 @@ function renderActiveWo(){
 
 async function finishWo(){
   if(!currentWo) return;
-  // Forcer une sauvegarde immédiate avant d'afficher le récap
   clearTimeout(_autoSaveTimer);
   showLoad('Enregistrement...');
   await autoSave();
@@ -1047,7 +1047,6 @@ async function finishWo(){
   const logId=currentWo.logId;
   const logObj=logs.find(l=>l.id===logId);
 
-  // Réinitialiser pour demain
   currentWo={name:'Séance du jour', date:todayDateStr(), sessId:null, logId:null, entries:[]};
   renderActiveWo();
   setSaveIndicator('');
