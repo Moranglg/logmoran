@@ -490,14 +490,7 @@ canvas { display: block; width: 100%; }
     position: relative;
   }
   .mni.on { color: var(--cyan); border-top-color: var(--cyan); }
-  .mni::before { font-size: 18px; line-height: 1; }
-  .mni[data-page="today"]::before    { content: '⚡'; }
-  .mni[data-page="exercises"]::before{ content: '🏋'; }
-  .mni[data-page="muscles"]::before  { content: '💪'; }
-  .mni[data-page="sessions"]::before { content: '📋'; }
-  .mni[data-page="programs"]::before { content: '📁'; }
-  .mni[data-page="week"]::before     { content: '📊'; }
-  .mni[data-page="progress"]::before { content: '📈'; }
+  .mni svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 
   .ph { flex-direction: column; gap: 10px; margin-bottom: 16px; }
   .btn-sm { padding: 8px 14px; }
@@ -526,6 +519,16 @@ canvas { display: block; width: 100%; }
   .chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
   .chips::-webkit-scrollbar { display: none; }
   .chart-hdr { flex-direction: column; align-items: flex-start; gap: 6px; }
+
+  .mni-drawer-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 24px;
+    font-family: var(--M); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text2); cursor: pointer; transition: all .1s;
+    border-bottom: 1px solid rgba(26,37,64,.4);
+  }
+  .mni-drawer-item:last-child { border-bottom: none; }
+  .mni-drawer-item:hover { background: var(--cyanG); color: var(--cyan); }
   .chart-sel { width: 100%; }
 }
 </style>
@@ -549,13 +552,30 @@ canvas { display: block; width: 100%; }
   <div class="nav-item"     data-page="progress"> <span class="nav-icon">📈</span>Progression</div>
 </aside>
 <div class="mnav" id="mnav">
-  <div class="mni"    data-page="today">Séance</div>
-  <div class="mni on" data-page="exercises">Exercices</div>
-  <div class="mni"    data-page="muscles">Muscles</div>
-  <div class="mni"    data-page="sessions">Séances</div>
-  <div class="mni"    data-page="programs">Programmes</div>
-  <div class="mni"    data-page="week">Semaine</div>
-  <div class="mni"    data-page="progress">Progression</div>
+  <div class="mni on" data-page="today"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg><span>Séance</span></div>
+  <div class="mni"    data-page="week"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span>Semaine</span></div>
+  <div class="mni"    data-page="progress"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Progression</span></div>
+  <div class="mni"    id="mni-settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><span>Réglages</span></div>
+</div>
+
+<!-- Settings drawer mobile -->
+<div id="settings-drawer" style="display:none;position:fixed;bottom:64px;left:0;right:0;z-index:400;background:rgba(3,5,10,.97);border-top:1px solid var(--b0);backdrop-filter:blur(18px);padding:8px 0;">
+  <div class="mni-drawer-item" onclick="goPage('exercises');toggleSettings()">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12"/></svg>
+    Exercices
+  </div>
+  <div class="mni-drawer-item" onclick="goPage('muscles');toggleSettings()">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M6.5 6.5s-1.5 2-1.5 5 1.5 5 1.5 5M17.5 6.5s1.5 2 1.5 5-1.5 5-1.5 5M12 3c0 0-4 2-4 9s4 9 4 9"/><path d="M12 3c0 0 4 2 4 9s-4 9-4 9"/></svg>
+    Muscles
+  </div>
+  <div class="mni-drawer-item" onclick="goPage('sessions');toggleSettings()">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+    Séances
+  </div>
+  <div class="mni-drawer-item" onclick="goPage('programs');toggleSettings()">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    Programmes
+  </div>
 </div>
 <main>
 
@@ -896,8 +916,13 @@ async function loadGoals(){
 
 // ════ NAVIGATION ════
 function goPage(name){
+  // Fermer le drawer settings si ouvert
+  const dr=document.getElementById('settings-drawer');
+  if(dr) dr.style.display='none';
+  const sb=document.getElementById('mni-settings');
+  if(sb) sb.style.color='';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nav-item,.mni').forEach(n=>n.classList.remove('on'));
+  document.querySelectorAll('.nav-item,.mni[data-page]').forEach(n=>n.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
   document.querySelectorAll('[data-page="'+name+'"]').forEach(n=>n.classList.add('on'));
   if(name==='today')     renderToday();
@@ -908,7 +933,28 @@ function goPage(name){
   if(name==='week')      renderWeek();
   if(name==='progress')  renderProgress();
 }
-document.querySelectorAll('.nav-item,.mni').forEach(n=>n.addEventListener('click',()=>goPage(n.dataset.page)));
+document.querySelectorAll('.nav-item,.mni[data-page]').forEach(n=>n.addEventListener('click',()=>goPage(n.dataset.page)));
+
+function toggleSettings(){
+  const d = document.getElementById('settings-drawer');
+  const btn = document.getElementById('mni-settings');
+  if(!d) return;
+  const open = d.style.display !== 'none';
+  d.style.display = open ? 'none' : 'block';
+  if(btn) btn.style.color = open ? '' : 'var(--cyan)';
+  // Fermer si on clique ailleurs
+  if(!open){
+    setTimeout(()=>{
+      document.addEventListener('click', function close(e){
+        if(!d.contains(e.target) && e.target.id !== 'mni-settings' && !document.getElementById('mni-settings')?.contains(e.target)){
+          d.style.display='none';
+          if(btn) btn.style.color='';
+          document.removeEventListener('click', close);
+        }
+      });
+    }, 50);
+  }
+}
 
 // ════ EXERCISES ════
 function renderEx(){
