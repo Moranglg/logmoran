@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LogMoran">
+<title>LogMoran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="shell">
+<aside>
+  <div class="logo">
+    <div class="logo-name">LOG<em>MORAN</em></div>
+    <div class="logo-sync">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-label">—</span>
+    </div>
+  </div>
+  <div class="nav-item"     data-page="today">   <span class="nav-icon">📝</span>Ajouter une séance</div>
+  <div class="nav-item on"  data-page="exercises"><span class="nav-icon">🏋</span>Exercices</div>
+  <div class="nav-item"     data-page="muscles">  <span class="nav-icon">💪</span>Muscles</div>
+  <div class="nav-item"     data-page="sessions"> <span class="nav-icon">📋</span>Séances</div>
+  <div class="nav-item"     data-page="programs"> <span class="nav-icon">📁</span>Programmes</div>
+  <div class="nav-item"     data-page="week">     <span class="nav-icon">📊</span>Semaine</div>
+  <div class="nav-item"     data-page="progress"> <span class="nav-icon">📈</span>Progression</div>
+</aside>
+<div class="mnav" id="mnav">
+  <div class="mni on" data-page="today"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg><span>Séance</span></div>
+  <div class="mni"    data-page="week"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span>Semaine</span></div>
+  <div class="mni"    data-page="progress"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Progression</span></div>
+  <div class="mni"    id="mni-settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><span>Réglages</span></div>
+</div>
+
+<!-- Settings drawer mobile -->
+<div id="settings-drawer" style="display:none;position:fixed;bottom:64px;left:0;right:0;z-index:400;background:#fff;border-top:1px solid var(--b0);box-shadow:0 -4px 16px rgba(0,0,0,.08);padding:8px 0;">
+  <div class="mni-drawer-item" onclick="goPage('exercises');toggleSettings()">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12"/></svg>
+    Exercices
+  </div>
+  <div class="mni-drawer-item" onclick="goPage('muscles');toggleSettings()">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M6.5 6.5s-1.5 2-1.5 5 1.5 5 1.5 5M17.5 6.5s1.5 2 1.5 5-1.5 5-1.5 5M12 3c0 0-4 2-4 9s4 9 4 9"/><path d="M12 3c0 0 4 2 4 9s-4 9-4 9"/></svg>
+    Muscles
+  </div>
+  <div class="mni-drawer-item" onclick="goPage('sessions');toggleSettings()">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+    Séances
+  </div>
+  <div class="mni-drawer-item" onclick="goPage('programs');toggleSettings()">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    Programmes
+  </div>
+</div>
+<main>
+
+<!-- EXERCICES -->
+<div class="page on" id="page-exercises">
+  <div class="ph">
+    <div><div class="ph-title">Exercices</div><div class="ph-sub">Ta bibliothèque</div></div>
+    <button class="btn btn-dk btn-sm" onclick="openExEdit(null)">+ Ajouter</button>
+  </div>
+  <div class="chips" id="ex-chips"></div>
+  <div id="ex-list"></div>
+</div>
+
+<!-- MUSCLES -->
+<div class="page" id="page-muscles">
+  <div class="ph">
+    <div><div class="ph-title">Groupes musculaires</div><div class="ph-sub">Utilisés pour classer les exercices et suivre le volume</div></div>
+    <button class="btn btn-dk btn-sm" onclick="openMuscleEdit(null,null)">+ Ajouter</button>
+  </div>
+  <div id="muscle-list"></div>
+</div>
+
+<!-- SÉANCES -->
+<div class="page" id="page-sessions">
+  <div class="ph">
+    <div><div class="ph-title">Séances</div><div class="ph-sub">Templates réutilisables</div></div>
+    <button class="btn btn-dk btn-sm" onclick="openSessEdit(null)">+ Créer</button>
+  </div>
+  <div id="sess-list"></div>
+</div>
+
+<!-- PROGRAMMES -->
+<div class="page" id="page-programs">
+  <div class="ph">
+    <div><div class="ph-title">Programmes</div><div class="ph-sub">Blocs d'entraînement</div></div>
+    <button class="btn btn-dk btn-sm" onclick="openProgEdit(null)">+ Créer</button>
+  </div>
+  <div id="prog-list"></div>
+</div>
+
+<!-- SÉANCE DU JOUR -->
+<div class="page" id="page-today">
+  <div class="ph">
+    <div>
+      <div class="ph-title">Ajouter une séance</div>
+      <div class="ph-sub" id="today-date"></div>
+    </div>
+    <button class="btn btn-gr btn-sm" onclick="finishWo()">Terminer ✓</button>
+  </div>
+
+  <!-- Charger une séance template (optionnel) -->
+  <div id="today-load-bar" style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">
+    <select id="today-sess-sel" style="flex:1;font-size:13px;">
+      <option value="">— Partir d'une séance existante —</option>
+    </select>
+    <button class="btn btn-gh btn-sm" onclick="loadSessionIntoToday()">Charger</button>
+  </div>
+
+  <div id="today-save-indicator" style="font-size:11px;color:var(--muted);font-family:var(--m);margin-bottom:12px;min-height:16px;"></div>
+
+  <div id="wo-ex-list"></div>
+
+  <div style="margin-top:16px;display:flex;gap:8px;align-items:center;">
+    <button class="btn btn-gh btn-sm" onclick="openPickerForWo()">+ Exercice</button>
+    <div style="flex:1"></div>
+    <button class="btn btn-rd btn-sm" onclick="clearToday()">Vider la séance</button>
+  </div>
+</div>
+
+<!-- SEMAINE -->
+<div class="page" id="page-week">
+  <div class="ph">
+    <div><div class="ph-title">Semaine</div></div>
+    <div class="week-nav">
+      <button class="week-nav__btn" id="week-prev" onclick="weekPrev()" aria-label="Semaine précédente">&lsaquo;</button>
+      <span class="week-nav__label" id="week-range"></span>
+      <button class="week-nav__btn" id="week-next" onclick="weekNext()" aria-label="Semaine suivante">&rsaquo;</button>
+    </div>
+  </div>
+  <div class="week-kpis">
+    <div class="week-kpi"><div class="week-kpi-v" id="w-vol">0</div><div class="week-kpi-l">Volume total (kg)</div></div>
+    <div class="week-kpi"><div class="week-kpi-v" id="w-sets">0</div><div class="week-kpi-l">Séries effectuées</div></div>
+  </div>
+  <div class="card" style="margin-bottom:14px;">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Séances de la semaine</div>
+    <div id="week-log-list"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:3px;">Séries par muscle</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Barre rouge = objectif. Modifie l'objectif directement.</div>
+    <table class="mtbl"><thead><tr><th>Muscle</th><th style="width:160px;">Progression</th><th>Séries</th><th>Volume (kg)</th><th>Objectif</th></tr></thead>
+    <tbody id="week-muscle-body"></tbody></table>
+  </div>
+</div>
+
+<!-- PROGRESSION -->
+<div class="page" id="page-progress">
+  <div class="ph"><div><div class="ph-title">Progression</div><div class="ph-sub">Une carte par exercice — clique pour le détail</div></div></div>
+  <div id="prog-grid" class="prog-grid"></div>
+</div>
+
+</main>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading"><div class="spinner"></div><div id="loading-msg">Chargement...</div></div>
+
+<!-- MODALS -->
+<div class="overlay" id="m-ex">
+  <div class="modal">
+    <div class="modal-ttl" id="m-ex-ttl">Ajouter un exercice</div>
+    <input type="hidden" id="ex-id">
+    <div class="fg"><label>Nom</label><input type="text" id="ex-name" placeholder="Ex : Développé couché barre"></div>
+    <div class="fg"><label>Groupe musculaire</label><select id="ex-muscle"></select></div>
+    <div class="fg"><label>Note</label><textarea id="ex-note" rows="2" placeholder="Technique, conseils..."></textarea></div>
+    <div class="modal-ft">
+      <button class="btn btn-gh btn-sm" onclick="closeM('m-ex')">Annuler</button>
+      <button class="btn btn-dk btn-sm" onclick="saveEx()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-muscle">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-ttl" id="m-muscle-ttl">Ajouter un groupe</div>
+    <input type="hidden" id="muscle-edit-id">
+    <div class="fg"><label>Nom</label><input type="text" id="muscle-edit-name" placeholder="Ex : Pectoraux"></div>
+    <div class="modal-ft">
+      <button class="btn btn-gh btn-sm" onclick="closeM('m-muscle')">Annuler</button>
+      <button class="btn btn-dk btn-sm" onclick="saveMuscle()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-del">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-ttl" id="m-del-ttl">Supprimer ?</div>
+    <div id="m-del-txt" style="font-size:13px;color:var(--muted);"></div>
+    <div class="modal-ft">
+      <button class="btn btn-gh btn-sm" onclick="closeM('m-del')">Annuler</button>
+      <button class="btn btn-rd btn-sm" id="m-del-ok">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-sess">
+  <div class="modal wide">
+    <div class="modal-ttl" id="m-sess-ttl">Créer une séance</div>
+    <input type="hidden" id="sess-id">
+    <div class="fg"><label>Nom</label><input type="text" id="sess-name" placeholder="Ex : Push A, Jambes..."></div>
+    <div class="fg"><label>Note</label><textarea id="sess-note" rows="1" placeholder="Objectif, contexte..."></textarea></div>
+    <div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <label style="margin:0">Exercices</label>
+        <button class="btn btn-gh btn-xs" onclick="openPickerFor('sess-edit')">+ Ajouter</button>
+      </div>
+      <div id="sess-edit-exos"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-gh btn-sm" onclick="closeM('m-sess')">Annuler</button>
+      <button class="btn btn-dk btn-sm" onclick="saveSess()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-prog">
+  <div class="modal wide">
+    <div class="modal-ttl" id="m-prog-ttl">Créer un programme</div>
+    <input type="hidden" id="prog-id">
+    <div class="fg"><label>Nom</label><input type="text" id="prog-name" placeholder="Ex : PPL, Upper/Lower..."></div>
+    <div class="fg"><label>Description</label><input type="text" id="prog-desc" placeholder="Ex : 4j/sem, hypertrophie"></div>
+    <div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <label style="margin:0">Séances</label>
+        <button class="btn btn-gh btn-xs" onclick="openPickerFor('prog-edit')">+ Séance</button>
+      </div>
+      <div id="prog-edit-sessions"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-gh btn-sm" onclick="closeM('m-prog')">Annuler</button>
+      <button class="btn btn-dk btn-sm" onclick="saveProg()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="m-picker" style="z-index:600">
+  <div class="modal">
+    <div class="modal-ttl" id="pk-ttl">Ajouter un exercice</div>
+    <input type="text" id="pk-search" placeholder="Rechercher..." oninput="renderPk()" style="margin-bottom:8px">
+    <div class="chips" id="pk-chips" style="margin-bottom:8px"></div>
+    <div id="pk-list" style="max-height:320px;overflow-y:auto"></div>
+    <div class="modal-ft"><button class="btn btn-gh btn-sm" onclick="closeM('m-picker')">Fermer</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="m-sess-pick">
+  <div class="modal">
+    <div class="modal-ttl">Ajouter une séance au programme</div>
+    <div id="sess-pick-list" style="max-height:340px;overflow-y:auto"></div>
+    <div class="modal-ft"><button class="btn btn-gh btn-sm" onclick="closeM('m-sess-pick')">Fermer</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="m-recap">
+  <div class="modal wide">
+    <div class="modal-ttl" id="recap-ttl">Récapitulatif</div>
+    <div class="recap-kpi" id="recap-kpi"></div>
+    <div class="divider"></div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:10px;">Détail des exercices</div>
+    <div id="recap-exos"></div>
+    <div class="divider"></div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:12px;">Volume par muscle</div>
+    <div id="recap-muscles"></div>
+    <div class="modal-ft">
+      <button class="btn btn-gh btn-sm" onclick="closeM('m-recap')">Fermer</button>
+      <button class="btn btn-am btn-sm" onclick="openLogEdit()">✏ Modifier</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Édition log existant -->
+<div class="overlay" id="m-log-edit">
+  <div class="modal wide">
+    <div class="modal-ttl">Modifier la séance</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div class="fg" style="margin:0"><label>Nom</label><input type="text" id="le-name" placeholder="Nom de la séance"></div>
+      <div class="fg" style="margin:0"><label>Date</label><input type="date" id="le-date"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <label style="margin:0">Exercices</label>
+      <button class="btn btn-gh btn-xs" onclick="openPickerForLogEdit()">+ Ajouter</button>
+    </div>
+    <div id="le-ex-list" style="margin-bottom:12px;"></div>
+    <div class="modal-ft">
+      <button class="btn btn-gh btn-sm" onclick="closeM('m-log-edit')">Annuler</button>
+      <button class="btn btn-dk btn-sm" onclick="saveLogEdit()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Détail d'un exercice (Progression) -->
+<div class="overlay" id="m-ex-detail">
+  <div class="modal wide">
+    <div class="modal-ttl" id="exd-ttl">Exercice</div>
+    <div class="exd-sub" id="exd-muscle"></div>
+    <div class="exd-pr" id="exd-pr"></div>
+    <div class="chart-box">
+      <div class="chart-hdr"><span class="chart-ttl">Charge max par séance</span></div>
+      <div class="chart-note">Le poids le plus lourd soulevé sur cet exercice lors de chaque séance.</div>
+      <canvas id="exd-c-w" height="160" style="display:none"></canvas>
+      <div id="exd-c-w-empty" style="text-align:center;padding:28px;color:var(--muted);font-size:13px;">Pas encore de données.</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-hdr"><span class="chart-ttl">1RM estimé (Epley)</span></div>
+      <div class="chart-note">Poids × (1 + reps/30) — compare des séries à charges et répétitions différentes sur une même échelle.</div>
+      <canvas id="exd-c-1rm" height="160" style="display:none"></canvas>
+      <div id="exd-c-1rm-empty" style="text-align:center;padding:28px;color:var(--muted);font-size:13px;">Pas encore de données.</div>
+    </div>
+    <div class="divider"></div>
+    <div class="exd-hist-ttl">Historique</div>
+    <div id="exd-hist"></div>
+    <div class="modal-ft">
+      <button class="btn btn-gh btn-sm" onclick="closeM('m-ex-detail')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-c" id="tc"></div>
+
+<!-- ════ SCRIPTS (ordre = dépendances) ════ -->
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/state.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/muscles.js"></script>
+<script src="js/sessions.js"></script>
+<script src="js/programs.js"></script>
+<script src="js/workout.js"></script>
+<script src="js/week.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
